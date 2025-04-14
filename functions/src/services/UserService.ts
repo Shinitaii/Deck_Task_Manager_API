@@ -1,3 +1,4 @@
+import {UpdateRequest} from "firebase-admin/auth";
 import {BaseResponse} from "../models/BaseResponse";
 import {User} from "../models/User";
 import {UserRepository} from "../repositories/UserRepository";
@@ -75,6 +76,23 @@ export class UserService {
     try {
       await this.userRepository.createUser(user);
       return {success: true, message: "Successfully created user!"};
+    } catch (error) {
+      return {success: false, message: error};
+    }
+  }
+
+  /**
+   * Updates the user in Firestore
+   * @param {uid} uid - UID of the user
+   * @param {data} data - values to be updated
+   * @return {Promise<BaseResponse>} - JSON Response
+   * containing a message successfully updated the user
+   */
+  public async updateUser(uid: string, data: UpdateRequest)
+  : Promise<BaseResponse> {
+    try {
+      await this.userRepository.updateUser(uid, data);
+      return {success: true, message: "Successfully updated user!"};
     } catch (error) {
       return {success: false, message: error};
     }

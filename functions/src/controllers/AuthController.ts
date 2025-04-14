@@ -58,4 +58,28 @@ export class AuthController {
       }
     }
   }
+
+  /**
+   * Updates user name after creating account.
+   * @param {req} req
+   * @param {res} res
+   */
+  public async updateAccountName(req: Request, res: Response): Promise<void> {
+    try {
+      const {uid, name} = req.body;
+      const update = await this.authService.updateUser(uid,
+        {displayName: name});
+      if (!update) {
+        res.status(401).json("Unable to update user's name");
+      }
+
+      res.status(200).json("Successfully updated user name");
+    } catch (error) {
+      if (error instanceof Error) {
+        console.log(error.message);
+      } else {
+        console.log("An unknown error occured in updating account name.");
+      }
+    }
+  }
 }

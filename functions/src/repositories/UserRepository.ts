@@ -29,4 +29,23 @@ export class UserRepository extends FirebaseAdmin {
     const db = this.getDb();
     await db.collection("users").add(user);
   }
+
+  /**
+   * Updates a user
+   * @param {userId} userId - UID of the user
+   * @param {user} user - New details of the user
+   */
+  public async updateUser(userId: string, user: Partial<User>): Promise<void> {
+    const db = this.getDb();
+    await db.collection("users").doc(userId).update(user);
+  }
+
+  /**
+   * Deletes a user
+   * @param {userId} userId - UID of the user
+   */
+  public async deleteUser(userId: string): Promise<void> {
+    const db = this.getDb();
+    await db.collection("users").doc(userId).delete();
+  }
 }

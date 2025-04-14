@@ -26,10 +26,15 @@ router.post("/verify-token", async (req: Request, res: Response) => {
 });
 
 /**
- *
+ * @route POST api/vi/auth/create-account
+ * @description Creates an account in the Firebase Authentication
+ * and Firestore.
+ * @returns Success 200
+ * @returns Error 500
  */
 router.post("/create-account", async (req : Request, res: Response) => {
   await userController.createUser(req, res);
+  await authController.updateAccountName(req, res);
 });
 
 export default router;
