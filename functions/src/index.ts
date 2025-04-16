@@ -40,12 +40,12 @@ app.use(cors(corsOptions));
 // TODO: Add rate limiter
 app.use(express.json());
 // app.use(errorHandler);
-app.use("/v1/auth", authRoutes);
+app.use("/v1/task", authRoutes);
 app.get("/v1", (req, res) => {
   res.json({
-    message: "Deck Authentication API is running",
+    message: "Deck Task Manager API is running",
   });
 });
 
 // eslint-disable-next-line camelcase
-export const deck_authentication_api = functions.https.onRequest(app);
+export const deck_task_manager_api = functions.https.onRequest(app);
