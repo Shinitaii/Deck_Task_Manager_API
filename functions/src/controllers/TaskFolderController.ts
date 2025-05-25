@@ -36,9 +36,6 @@ export class TaskFolderController {
         user_id: userId,
       };
 
-      console.log(taskFolderDetails);
-      console.log(taskFolder);
-
       const creation = await this.taskFolderService
         .createTaskFolder(userId, taskFolder);
 
