@@ -1,6 +1,7 @@
-import {Request, Response} from "express";
+import {Response} from "express";
 import {TaskService} from "../services/TaskService";
 import {Task} from "../models/Task";
+import {AuthenticatedRequest} from "../interface/AuthenticatedRequest";
 /**
  * Handles the HTTP requests for task-related
  * logic.
@@ -25,9 +26,9 @@ export class TaskController {
    * @param {Response} res - The HTTP response object.
    * @return {Promise<void>} A JSON response containing the action.
    */
-  public async getTasksByUser(req: Request, res: Response): Promise<void> {
+  public async getTasksByUser(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const {userId} = req.body;
+      const userId = req.user?.user_id;
       const tasks = await this.taskService.getTasksByUser(userId);
 
       if (!tasks) {
@@ -52,9 +53,10 @@ export class TaskController {
    * @param {Response} res - The HTTP response object.
    * @return {Promise<void>} A JSON response containing the action.
    */
-  public async getTasksByDate(req: Request, res: Response): Promise<void> {
+  public async getTasksByDate(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const {userId, date} = req.body;
+      const {date} = req.body;
+      const userId = req.user?.user_id;
       const tasks = await this.taskService.getTasksByDate(userId, date);
 
       if (!tasks) {
@@ -80,9 +82,10 @@ export class TaskController {
    * @param {Response} res - The HTTP response object.
    * @return {Promise<void>} A JSON response containing the action.
    */
-  public async getTasksByFolder(req: Request, res: Response): Promise<void> {
+  public async getTasksByFolder(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const {userId, taskFolderId} = req.body;
+      const {taskFolderId} = req.body;
+      const userId = req.user?.user_id;
       const tasks = await this.taskService
         .getTasksInFolder(userId, taskFolderId);
 
@@ -110,10 +113,11 @@ export class TaskController {
    * @return {Promise<void>} A JSON response containing the action.
    */
   public async getTasksByDateInFolder(
-    req: Request, res: Response
+    req: AuthenticatedRequest, res: Response
   ): Promise<void> {
     try {
-      const {userId, taskFolderId, date} = req.body;
+      const {taskFolderId, date} = req.body;
+      const userId = req.user?.user_id;
       const tasks = await this.taskService
         .getTasksByDateInFolder(userId, taskFolderId, date);
 
@@ -140,10 +144,11 @@ export class TaskController {
    * @param {Response} res - The HTTP response object.
    * @return {Promise<void>} A JSON response containing the action.
    */
-  public async createTask(req: Request, res: Response): Promise<void> {
+  public async createTask(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const {taskFolderId} = req.params;
-      const {userId, taskDetails} = req.body;
+      const {taskDetails} = req.body;
+      const userId = req.user?.user_id;
       const creation = await this.taskService
         .createTask(userId, taskFolderId, taskDetails as Task);
 
@@ -171,10 +176,11 @@ export class TaskController {
    * @param {Response} res - The HTTP response object.
    * @return {Promise<void>} A JSON response containing the action.
    */
-  public async updateTask(req: Request, res: Response): Promise<void> {
+  public async updateTask(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const {taskFolderId} = req.params;
-      const {userId, taskId, taskDetails} = req.body;
+      const {taskId, taskDetails} = req.body;
+      const userId = req.user?.user_id;
       const update = await this.taskService
         .updateTask(userId, taskFolderId, taskId,
           taskDetails as Partial<Task>
@@ -206,10 +212,11 @@ export class TaskController {
    * @param {Response} res - The HTTP response object.
    * @return {Promise<void>} A JSON response containing the action.
    */
-  public async deleteTask(req: Request, res: Response): Promise<void> {
+  public async deleteTask(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const {taskFolderId} = req.params;
-      const {userId, taskId} = req.body;
+      const {taskId} = req.body;
+      const userId = req.user?.user_id;
 
       const deletion = await this.taskService
         .deleteTask(userId, taskFolderId, taskId);

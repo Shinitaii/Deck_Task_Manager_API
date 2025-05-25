@@ -10,7 +10,7 @@
 import * as functions from "firebase-functions";
 import express from "express";
 import cors from "cors";
-import {corsOptions} from "../src/config/corsOption";
+import {corsOptions} from "./config/corsOption";
 import authRoutes from "./routes/Routes";
 import {AuthenticationService} from "./services/AuthenticationService";
 import {logRequest} from "./middleware/loggerMiddleware";

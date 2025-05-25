@@ -1,6 +1,7 @@
-import {Request, Response} from "express";
+import {Response} from "express";
 import {TaskFolderService} from "../services/TaskFolderService";
-import {TaskFolder} from "../models/TaskFolder";
+import {NewTaskFolder, TaskFolder} from "../models/TaskFolder";
+import {AuthenticatedRequest} from "../interface/AuthenticatedRequest";
 /**
  * Handles the HTTP requests for task folder-related
  * logic.
@@ -25,11 +26,21 @@ export class TaskFolderController {
    * @param {Response} res - The HTTP response object.
    * @return {Promise<void>} A JSON response containing the action.
    */
-  public async createTaskFolder(req: Request, res: Response): Promise<void> {
+  public async createTaskFolder(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const {userId, taskFolderDetails} = req.body;
+      const {taskFolderDetails} = req.body as {taskFolderDetails: NewTaskFolder};
+      const userId = req.user?.user_id;
+
+      const taskFolder: TaskFolder = {
+        ...taskFolderDetails,
+        user_id: userId,
+      };
+
+      console.log(taskFolderDetails);
+      console.log(taskFolder);
+
       const creation = await this.taskFolderService
-        .createTaskFolder(userId, taskFolderDetails as TaskFolder);
+        .createTaskFolder(userId, taskFolder);
 
       if (!creation) {
         res.status(400).json({
@@ -55,9 +66,10 @@ export class TaskFolderController {
    * @param {Response} res - The HTTP response object.
    * @return {Promise<void>} A JSON response containing the action.
    */
-  public async updateTaskFolder(req: Request, res: Response): Promise<void> {
+  public async updateTaskFolder(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const {userId, taskFolderId, taskFolderDetails} = req.body;
+      const {taskFolderId, taskFolderDetails} = req.body;
+      const userId = req.user?.user_id;
       const update = await this.taskFolderService
         .updateTaskFolder(userId, taskFolderId,
           taskFolderDetails as Partial<TaskFolder>
@@ -89,9 +101,9 @@ export class TaskFolderController {
    * @param {Response} res - The HTTP response object.
    * @return {Promise<void>} A JSON response containing the action.
    */
-  public async getTaskFolders(req: Request, res: Response): Promise<void> {
+  public async getTaskFolders(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const {userId} = req.body;
+      const userId = req.user?.user_id;
       const folders = await this.taskFolderService.getTaskFoldersOfUser(userId);
 
       if (!folders) {
@@ -116,9 +128,10 @@ export class TaskFolderController {
    * @param {Response} res - The HTTP response object.
    * @return {Promise<void>} A JSON response containing the action.
    */
-  public async deleteTaskFolder(req: Request, res: Response): Promise<void> {
+  public async deleteTaskFolder(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const {userId, taskFolderId} = req.body;
+      const {taskFolderId} = req.body;
+      const userId = req.user?.user_id;
 
       const deletion = await this.taskFolderService
         .deleteTaskFolder(userId, taskFolderId);
