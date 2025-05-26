@@ -1,4 +1,5 @@
 import {FirebaseAdmin} from "../config/firebaseAdmin";
+import {ApiError} from "../helper/apiError";
 import {Task} from "../models/Task";
 
 /**
@@ -48,20 +49,64 @@ export class TaskRepository extends FirebaseAdmin {
    * Returns an array of tasks from the user within the folder.
    */
   public async getTasksByFolder(userId: string, taskFolderId: string)
-  : Promise<FirebaseFirestore.DocumentData[] | null> {
-    const db = this.getDb();
+  : Promise<{
+    pending: FirebaseFirestore.DocumentData[];
+    inProgress: FirebaseFirestore.DocumentData[];
+    completed: FirebaseFirestore.DocumentData[];
+  }> {
+    try {
+      const db = this.getDb();
 
-    const taskSnap = await db
-      .collection("task_folders").doc(userId)
-      .collection("folders").doc(taskFolderId)
-      .collection("tasks").get();
+      const taskSnap = await db
+        .collection("task_folders").doc(userId)
+        .collection("folders").doc(taskFolderId)
+        .collection("tasks")
+        .orderBy("end_date", "asc")
+        .get();
 
-    if (taskSnap.empty) return null;
+      if (taskSnap.empty) {
+        // Return empty buckets instead of throwing, if you prefer
+        return {pending: [], inProgress: [], completed: []};
+      }
 
-    return taskSnap.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+      // Initialize buckets
+      const pending: FirebaseFirestore.DocumentData[] = [];
+      const inProgress: FirebaseFirestore.DocumentData[] = [];
+      const completed: FirebaseFirestore.DocumentData[] = [];
+
+      // Distribute each doc into the right bucket
+      taskSnap.docs.forEach((doc) => {
+        const data = {id: doc.id, ...doc.data()} as FirebaseFirestore.DocumentData;
+        const status = (doc.data().status as string).toLowerCase();
+
+        switch (status) {
+        case "pending":
+          pending.push(data);
+          break;
+        case "in progress":
+        case "in_progress":
+          inProgress.push(data);
+          break;
+        case "completed":
+          completed.push(data);
+          break;
+        default:
+          // you could log or handle unexpected statuses here
+          pending.push(data);
+        }
+      });
+      return {pending, inProgress, completed};
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      if (error instanceof ApiError) {
+        throw error; // Re-throw ApiError for handling in the service layer
+      } else {
+        throw new ApiError(
+          "Error fetching tasks from folder",
+          500, "Error fetching tasks from folder: " + error.message
+        );
+      }
+    }
   }
 
   /**
@@ -93,11 +138,23 @@ export class TaskRepository extends FirebaseAdmin {
    */
   public async createTask(
     userId: string, taskFolderId: string, task: Task): Promise<void> {
-    const db = this.getDb();
-    await db
-      .collection("task_folders").doc(userId)
-      .collection("folders").doc(taskFolderId)
-      .collection("tasks").add(task);
+    try {
+      const db = this.getDb();
+      await db
+        .collection("task_folders").doc(userId)
+        .collection("folders").doc(taskFolderId)
+        .collection("tasks").add(task);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      if (error instanceof ApiError) {
+        throw error; // Re-throw ApiError for handling in the service layer
+      } else {
+        throw new ApiError(
+          "Error creating task",
+          500, "Error creating task: " + error.message
+        );
+      }
+    }
   }
 
   /**

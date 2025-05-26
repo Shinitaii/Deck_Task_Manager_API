@@ -5,7 +5,7 @@ import {Timestamp} from "firebase-admin/firestore";
  */
 export interface NewTaskFolder {
     title: string,
-    description: string,
+    background: string,
     timestamp: Timestamp,
     is_deleted: boolean,
 }

@@ -1,3 +1,4 @@
+import {ApiError} from "../helper/apiError";
 import {FirebaseAdmin} from "../config/firebaseAdmin";
 import {TaskFolder} from "../models/TaskFolder";
 
@@ -44,16 +45,53 @@ export class TaskFolderRepository extends FirebaseAdmin {
   }
 
   /**
-   * Creates a task folder on the user.
-   * @param {userId} userId - UID of the user.
-   * @param {taskFolder} taskFolder - Task Folder details
-   */
+ * Creates a task folder for the user and returns the created folder with its ID.
+ * @param {string} userId - UID of the user.
+ * @param {TaskFolder} taskFolder - Task Folder details.
+ * @returns {Promise<object>} - The created task folder data with its generated ID.
+ */
   public async createTaskFolder(
-    userId: string, taskFolder: TaskFolder): Promise<void> {
-    const db = this.getDb();
-    await db.collection("task_folders").doc(userId)
-      .collection("folders").add(taskFolder);
+    userId: string, taskFolder: TaskFolder
+  ): Promise<object> {
+    try {
+      const db = this.getDb();
+      const folderRef = await db
+        .collection("task_folders")
+        .doc(userId)
+        .collection("folders")
+        .add(taskFolder);
+
+      // Retrieve the newly created document
+      const snapshot = await folderRef.get();
+
+      if (!snapshot.exists) {
+        throw new ApiError(
+          "Failed to create task folder. Please try again later.",
+          400,
+        );
+      }
+
+      const createdFolder = snapshot.data();
+
+      // Return the folder data including the generated ID
+      return {
+        new_task_folder: {
+          id: folderRef.id,
+          ...createdFolder,
+        },
+      };
+    } catch (error) {
+      if (error instanceof ApiError) {
+        throw error; // Re-throw ApiError to be handled by the caller
+      } else {
+        throw new ApiError(
+          "An error occurred while creating the task folder: " + error,
+          500,
+        );
+      }
+    }
   }
+
 
   /**
    * Updates a task folder on the user.

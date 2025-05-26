@@ -21,12 +21,12 @@ export class TaskFolderService {
      * @return {Promise<BaseResponse>} Response containing the
      * task folders.
      */
-  public async getTaskFoldersOfUser(userId: string): Promise<BaseResponse> {
+  public async getTaskFoldersOfUser(userId: string): Promise<object> {
     try {
       const response = await this.taskFolderRepository
         .getTaskFoldersByUserId(userId);
 
-      return {success: true, message: response};
+      return {success: true, message: "Task Folders Successfuly Retrieved", data: response};
     } catch (error) {
       return {success: false, message: "Error fetching task folders: " + error};
     }
@@ -40,21 +40,15 @@ export class TaskFolderService {
      * @return {Promise<BaseResponse>} Response indicating status
      */
   public async createTaskFolder(userId: string, taskFolder: TaskFolder)
-    : Promise<BaseResponse> {
-    if (taskFolder.title === null || taskFolder.description === null) {
-      return {
-        success: false,
-        message: "Title or Description must not be empty",
-      };
-    }
-
+    : Promise<object> {
     try {
-      await this.taskFolderRepository
+      const newTaskFolder = await this.taskFolderRepository
         .createTaskFolder(userId, taskFolder);
 
       return {
         success: true,
         message: "Successfully created task folder.",
+        data: newTaskFolder,
       };
     } catch (error) {
       return {
@@ -76,12 +70,12 @@ export class TaskFolderService {
     userId: string, taskFolderId: string, taskFolder: Partial<TaskFolder>
   ): Promise<BaseResponse> {
     try {
-      if (taskFolder.title === null || taskFolder.description === null) {
-        return {
-          success: false,
-          message: "Title or Description must not be empty",
-        };
-      }
+      // if (taskFolder.title === null || taskFolder.description === null) {
+      //   return {
+      //     success: false,
+      //     message: "Title or Description must not be empty",
+      //   };
+      // }
 
       await this.taskFolderRepository
         .updateTaskFolder(userId, taskFolderId, taskFolder);

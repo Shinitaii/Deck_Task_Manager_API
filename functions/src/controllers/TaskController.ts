@@ -83,27 +83,22 @@ export class TaskController {
    * @return {Promise<void>} A JSON response containing the action.
    */
   public async getTasksByFolder(req: AuthenticatedRequest, res: Response): Promise<void> {
-    try {
-      const {taskFolderId} = req.body;
-      const userId = req.user?.user_id;
-      const tasks = await this.taskService
-        .getTasksInFolder(userId, taskFolderId);
+    const {folderId} = req.params;
+    const userId = req.user?.user_id;
+    const tasks = await this.taskService
+      .getTasksInFolder(userId, folderId);
 
-      if (!tasks) {
-        res.status(400).json(
-          {success: false, message: "Cannot fetch tasks."}
-        );
-      }
-
-      res.status(200).json(tasks);
-    } catch (error) {
-      if (error instanceof Error) {
-        console.log(error.message);
-      } else {
-        console.log("An unknown error occurred in" +
-          " fetching selected folder tasks.");
-      }
+    if (!tasks) {
+      res.status(400).json(
+        {success: false, message: "Cannot fetch tasks."}
+      );
     }
+
+    res.status(200).json({
+      success: true,
+      message: "Cannot fetch tasks.",
+      data: tasks,
+    });
   }
 
   /**
@@ -145,29 +140,21 @@ export class TaskController {
    * @return {Promise<void>} A JSON response containing the action.
    */
   public async createTask(req: AuthenticatedRequest, res: Response): Promise<void> {
-    try {
-      const {taskFolderId} = req.params;
-      const {taskDetails} = req.body;
-      const userId = req.user?.user_id;
-      const creation = await this.taskService
-        .createTask(userId, taskFolderId, taskDetails as Task);
+    const {taskDetails} = req.body;
+    const taskFolderId = taskDetails.task_folder_id;
+    const userId = req.user?.user_id;
+    const creation = await this.taskService
+      .createTask(userId, taskFolderId, taskDetails as Task);
 
-      if (!creation) {
-        res.status(400).json({
-          success: false,
-          message: "Unable to create task."}
-        );
-        return;
-      }
-
-      res.status(200).json(creation);
-    } catch (error) {
-      if (error instanceof Error) {
-        console.log(error.message);
-      } else {
-        console.log("An unknown error occurred in creating the task.");
-      }
+    if (!creation) {
+      res.status(400).json({
+        success: false,
+        message: "Unable to create task."}
+      );
+      return;
     }
+
+    res.status(200).json(creation);
   }
 
   /**

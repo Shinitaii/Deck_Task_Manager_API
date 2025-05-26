@@ -103,7 +103,7 @@ router.get("/fetch-tasks/date", async (req: Request, res: Response) => {
  * @returns Success 200
  * @returns Error 500
  */
-router.get("fetch-tasks/folder/all", async (req: Request, res: Response) => {
+router.get("/fetch-tasks/folder/:folderId", async (req: Request, res: Response) => {
   await taskController.getTasksByFolder(req, res);
 });
 

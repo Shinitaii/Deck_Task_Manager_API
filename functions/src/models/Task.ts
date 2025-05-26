@@ -11,5 +11,5 @@ export interface Task {
     priority: string,
     start_date: Timestamp,
     end_date: Timestamp,
-    done_date: Timestamp,
+    done_date?: Timestamp,
 }

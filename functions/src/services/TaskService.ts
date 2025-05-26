@@ -42,15 +42,11 @@ export class TaskService {
      */
   public async getTasksInFolder(
     userId: string, taskFolderId: string
-  ): Promise<BaseResponse> {
-    try {
-      const response = await this.taskRepository
-        .getTasksByFolder(userId, taskFolderId);
+  ): Promise<object> {
+    const response = await this.taskRepository
+      .getTasksByFolder(userId, taskFolderId);
 
-      return {success: true, message: response};
-    } catch (error) {
-      return {success: false, message: "Error fetching task: " + error};
-    }
+    return response;
   }
 
   /**
@@ -84,36 +80,57 @@ export class TaskService {
   }
 
   /**
-   * Fetches all tasks within the folder
-   * with its selected date.
-   * @param {userId} userId - UID of the user
-   * @param {taskFolderId} taskFolderId - UID of the task folder
-   * @param {date} date - Selected date.
-   * @return {Promise<BaseResponse>} Results containing tasks.
-   */
+ * Fetches all tasks within the folder for a given date,
+ * grouped by status.
+ * @param {string} userId - UID of the user
+ * @param {string} taskFolderId - UID of the task folder
+ * @param {Date} date - Selected date.
+ * @return {Promise<BaseResponse>} Results containing tasks.
+ */
   public async getTasksByDateInFolder(
-    userId: string, taskFolderId: string, date: Date
+    userId: string,
+    taskFolderId: string,
+    date: Date
   ): Promise<BaseResponse> {
     try {
-      const response = await this.taskRepository
-        .getTasksByFolder(userId, taskFolderId);
-      const selectedDate = date.toDateString();
+      // New repository returns an object with three arrays
+      const allGroups = await this.taskRepository.getTasksByFolder(
+        userId,
+        taskFolderId
+      ) as {
+        pending: FirebaseFirestore.DocumentData[];
+        inProgress: FirebaseFirestore.DocumentData[];
+        completed: FirebaseFirestore.DocumentData[];
+      };
 
-      const filtered = response?.filter((task) => {
-        const taskDate = (task.start_date as Timestamp).toDate().toDateString();
-        return taskDate === selectedDate;
-      });
+      const target = date.toDateString();
+
+      // Helper to filter one bucket
+      const filterByDate = (tasks: FirebaseFirestore.DocumentData[]) =>
+        tasks.filter((t) => {
+          const taskDate = (t.start_date as Timestamp).toDate().toDateString();
+          return taskDate === target;
+        });
+
+      const filtered = {
+        pending: filterByDate(allGroups.pending),
+        inProgress: filterByDate(allGroups.inProgress),
+        completed: filterByDate(allGroups.completed),
+      };
 
       return {
         success: true,
-        message: filtered,
+        message: filtered, // you could rename this field to `data` if you prefer
       };
-    } catch (error) {
-      return {success: false,
-        message: "Error fetching task of selected date: " + error,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      return {
+        success: false,
+        message: "Error fetching tasks for selected date: " + error.message,
       };
     }
   }
+
 
   /**
      * Business logic of creating a task for the user.
@@ -133,20 +150,13 @@ export class TaskService {
       };
     }
 
-    try {
-      await this.taskRepository
-        .createTask(userId, taskFolderId, task);
+    await this.taskRepository
+      .createTask(userId, taskFolderId, task);
 
-      return {
-        success: true,
-        message: "Successfully created task.",
-      };
-    } catch (error) {
-      return {
-        success: false,
-        message: "Error creating task: " + error,
-      };
-    }
+    return {
+      success: true,
+      message: "Successfully created task.",
+    };
   }
 
   /**
