@@ -46,7 +46,7 @@ router.get("/get-task-folders", async (req:Request, res: Response) => {
  * @returns Success 200
  * @returns Error 500
  */
-router.put("/update-task-folder", async (req: Request, res: Response) => {
+router.put("/update-task-folder/:taskFolderId", async (req: Request, res: Response) => {
   await taskFolderController.updateTaskFolder(req, res);
 });
 
@@ -57,7 +57,7 @@ router.put("/update-task-folder", async (req: Request, res: Response) => {
  * @returns Success 200
  * @returns Error 500
  */
-router.delete("/delete-task-folder", async (req: Request, res: Response) => {
+router.delete("/delete-task-folder/:taskFolderId", async (req: Request, res: Response) => {
   await taskFolderController.deleteTaskFolder(req, res);
 });
 
@@ -137,7 +137,7 @@ router.get("/fetch-tasks/folder/:folderId/date", async (req: Request, res: Respo
  * @returns Success 200
  * @returns Error 500
  */
-router.put("/update-task", async (req: Request, res: Response) => {
+router.put("/update-task/:taskFolderId", async (req: Request, res: Response) => {
   await taskController.updateTask(req, res);
 });
 
@@ -148,7 +148,7 @@ router.put("/update-task", async (req: Request, res: Response) => {
  * @returns Success 200
  * @returns Error 500
  */
-router.delete("/delete-task", async (req: Request, res: Response) => {
+router.delete("/delete-task/:taskFolderId", async (req: Request, res: Response) => {
   await taskController.deleteTask(req, res);
 });
 

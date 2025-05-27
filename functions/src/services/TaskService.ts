@@ -190,15 +190,7 @@ export class TaskService {
     userId: string, taskFolderId: string, taskId: string, task: Partial<Task>
   ): Promise<BaseResponse> {
     try {
-      if (task.title === null || task.description === null) {
-        return {
-          success: false,
-          message: "Title or Description must not be empty",
-        };
-      }
-
-      await this.taskRepository
-        .updateTask(userId, taskFolderId, taskId, task);
+      await this.taskRepository.updateTask(userId, taskFolderId, taskId, task);
 
       return {
         success: true,
@@ -207,7 +199,7 @@ export class TaskService {
     } catch (error) {
       return {
         success: false,
-        message: "Error creating task: " + error,
+        message: "Error updating task: " + error,
       };
     }
   }

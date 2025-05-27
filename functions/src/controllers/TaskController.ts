@@ -174,30 +174,57 @@ export class TaskController {
       const {taskFolderId} = req.params;
       const {taskId, taskDetails} = req.body;
       const userId = req.user?.user_id;
-      const update = await this.taskService
-        .updateTask(userId, taskFolderId, taskId,
-          taskDetails as Partial<Task>
-        );
 
-      if (!update) {
-        res.status(400).json({
-          success: false,
-          message: "Unable to update task."}
-        );
+      if (!taskId || !taskFolderId) {
+        res.status(400).json({success: false, message: "Task ID and Task Folder ID are required."});
         return;
       }
 
-      res.status(200).json(
-        {success: true, message: "Successfully updated task."}
+      const allowedPriorities = ["High", "Medium", "Low"];
+      const allowedStatuses = ["Pending", "In Progress", "Completed"];
+
+      // Validate priority and status if provided
+      if (taskDetails.priority && !allowedPriorities.includes(taskDetails.priority)) {
+        res.status(400).json({success: false, message: "Invalid priority value."});
+        return;
+      }
+
+      if (taskDetails.status && !allowedStatuses.includes(taskDetails.status)) {
+        res.status(400).json({success: false, message: "Invalid status value."});
+        return;
+      }
+
+      // Validate date consistency if both provided
+      if (taskDetails.start_date && taskDetails.end_date) {
+        const startDate = new Date(taskDetails.start_date);
+        const endDate = new Date(taskDetails.end_date);
+        if (endDate < startDate) {
+          res.status(400).json({success: false, message: "Due date cannot be earlier than start date."});
+          return;
+        }
+      }
+
+      const update = await this.taskService.updateTask(
+        userId, taskFolderId, taskId, taskDetails as Partial<Task>
       );
+
+      if (!update.success) {
+        res.status(400).json(update);
+        return;
+      }
+
+      res.status(200).json(update);
     } catch (error) {
       if (error instanceof Error) {
         console.log(error.message);
+        res.status(500).json({success: false, message: "An error occurred while updating task."});
       } else {
         console.log("An unknown error occurred in updating task.");
+        res.status(500).json({success: false, message: "An unknown error occurred."});
       }
     }
   }
+
 
   /**
    * Deletes a task.
@@ -208,16 +235,26 @@ export class TaskController {
   public async deleteTask(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const {taskFolderId} = req.params;
-      const {taskId} = req.body;
+      const {taskId} = req.query as {taskId: string};
+      const taskIdStr = typeof taskId === "string" ? taskId : undefined;
       const userId = req.user?.user_id;
 
+
+      if (!taskIdStr || typeof taskIdStr !== "string") {
+        res.status(400).json(
+          {success: false, message: "Task ID is required and must be a string."}
+        );
+        return;
+      }
+
       const deletion = await this.taskService
-        .deleteTask(userId, taskFolderId, taskId);
+        .deleteTask(userId, taskFolderId, taskIdStr);
 
       if (!deletion) {
         res.status(400).json(
           {success: false, message: "Cannot delete task folder."}
         );
+        return;
       }
 
       res.status(200).json(

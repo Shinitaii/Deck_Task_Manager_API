@@ -65,30 +65,29 @@ export class TaskFolderController {
    */
   public async updateTaskFolder(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const {taskFolderId, taskFolderDetails} = req.body;
+      const {taskFolderId} = req.params;
+      const {taskFolderDetails} = req.body;
       const userId = req.user?.user_id;
-      const update = await this.taskFolderService
-        .updateTaskFolder(userId, taskFolderId,
-          taskFolderDetails as Partial<TaskFolder>
-        );
 
-      if (!update) {
-        res.status(400).json({
-          success: false,
-          message: "Unable to update task folder."}
-        );
+      if (!taskFolderId) {
+        res.status(400).json({success: false, message: "Task folder ID is required."});
         return;
       }
 
-      res.status(200).json(
-        {success: true, message: "Successfully updated task folder."}
+      const update = await this.taskFolderService.updateTaskFolder(
+        userId, taskFolderId, taskFolderDetails as Partial<TaskFolder>
       );
-    } catch (error) {
-      if (error instanceof Error) {
-        console.log(error.message);
-      } else {
-        console.log("An unknown error occurred in updating task folder.");
+
+      if (!update.success) {
+        res.status(400).json({success: false, message: update.message});
+        return;
       }
+
+      res.status(200).json(update);
+    } catch (error) {
+      const errMsg = error instanceof Error ? error.message : "Unknown error";
+      console.error(errMsg);
+      res.status(500).json({success: false, message: "An error occurred while updating task folder."});
     }
   }
 
@@ -127,7 +126,7 @@ export class TaskFolderController {
    */
   public async deleteTaskFolder(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const {taskFolderId} = req.body;
+      const {taskFolderId} = req.params;
       const userId = req.user?.user_id;
 
       const deletion = await this.taskFolderService

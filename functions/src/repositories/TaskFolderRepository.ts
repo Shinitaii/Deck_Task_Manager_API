@@ -129,15 +129,17 @@ export class TaskFolderRepository extends FirebaseAdmin {
       .collection("folders").doc(taskFolderId).update(taskFolder);
   }
 
-  /**
-   * Deletes a task folder on the user.
-   * @param {userId} userId - UID of the user.
-   * @param {taskFolderId} taskFolderId - UID of the task folder.
-   */
   public async deleteTaskFolder(
-    userId: string, taskFolderId: string): Promise<void> {
+    userId: string,
+    taskFolderId: string
+  ): Promise<void> {
     const db = this.getDb();
-    await db.collection("task_folders").doc(userId)
-      .collection("folders").doc(taskFolderId).delete();
+    const folderRef = db
+      .collection("task_folders")
+      .doc(userId)
+      .collection("folders")
+      .doc(taskFolderId);
+
+    await db.recursiveDelete(folderRef);
   }
 }

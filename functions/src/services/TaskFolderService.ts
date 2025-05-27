@@ -70,13 +70,6 @@ export class TaskFolderService {
     userId: string, taskFolderId: string, taskFolder: Partial<TaskFolder>
   ): Promise<BaseResponse> {
     try {
-      // if (taskFolder.title === null || taskFolder.description === null) {
-      //   return {
-      //     success: false,
-      //     message: "Title or Description must not be empty",
-      //   };
-      // }
-
       await this.taskFolderRepository
         .updateTaskFolder(userId, taskFolderId, taskFolder);
 
@@ -87,7 +80,7 @@ export class TaskFolderService {
     } catch (error) {
       return {
         success: false,
-        message: "Error creating task folder: " + error,
+        message: "Error creating task folder: " + (error instanceof Error ? error.message : error),
       };
     }
   }
