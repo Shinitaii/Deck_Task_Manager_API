@@ -87,12 +87,23 @@ router.get("/fetch-tasks/all", async (req: Request, res: Response) => {
 
 /**
  *
+ * @route GET api/v1/task/fetch-tasks/all
+ * @description Gets all tasks from user
+ * @returns Success 200
+ * @returns Error 500
+ */
+router.get("/fetch-tasks/near-deadline", async (req: Request, res: Response) => {
+  await taskController.getNearingDueTasks(req, res);
+});
+
+/**
+ *
  * @route GET api/v1/task/fetch-tasks/date
  * @description Gets all tasks with selected date
  * @returns Success 200
  * @returns Error 500
  */
-router.get("/fetch-tasks/date", async (req: Request, res: Response) => {
+router.get("/fetch-tasks/date/:folderId", async (req: Request, res: Response) => {
   await taskController.getTasksByDate(req, res);
 });
 
@@ -115,7 +126,7 @@ router.get("/fetch-tasks/folder/:folderId", async (req: Request, res: Response) 
  * @returns Success 200
  * @returns Error 500
  */
-router.get("/fetch-tasks/folder/date", async (req: Request, res: Response) => {
+router.get("/fetch-tasks/folder/:folderId/date", async (req: Request, res: Response) => {
   await taskController.getTasksByDateInFolder(req, res);
 });
 

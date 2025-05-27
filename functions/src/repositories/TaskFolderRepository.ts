@@ -8,24 +8,46 @@ import {TaskFolder} from "../models/TaskFolder";
  */
 export class TaskFolderRepository extends FirebaseAdmin {
   /**
-   * Gets all the task folders from the user.
-   * @param {userId} userId - UID of the user
-   * @return {Promise<FirebaseFirestore.DocumentData[] | null>}
-   * Returns an array of task folders from the user.
-   */
-  public async getTaskFoldersByUserId(userId: string)
-  : Promise<FirebaseFirestore.DocumentData[] | null> {
+ * Gets all the task folders from the user, including task stats.
+ * @param {string} userId - UID of the user
+ * @return {Promise<any[] | null>}
+ * Returns an array of task folders with total task count and completed task count.
+ */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  public async getTaskFoldersByUserId(userId: string): Promise<any[] | null> {
     const db = this.getDb();
 
     const taskFolderSnap = await db.collection("task_folders").doc(userId)
       .collection("folders").get();
+
     if (taskFolderSnap.empty) return null;
 
-    return taskFolderSnap.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    const foldersWithStats = await Promise.all(
+      taskFolderSnap.docs.map(async (folderDoc) => {
+        const folderId = folderDoc.id;
+
+        const tasksSnap = await db.collection("task_folders").doc(userId)
+          .collection("folders").doc(folderId)
+          .collection("tasks").get();
+
+        const totalTasks = tasksSnap.size;
+
+        const completedTasksCount = tasksSnap.docs
+          .filter((doc) => doc.data().status === "completed")
+          .length;
+
+        return {
+          id: folderId,
+          ...folderDoc.data(),
+          totalTasks,
+          completedTasksCount,
+        };
+      })
+    );
+
+    return foldersWithStats;
   }
+
 
   /**
    * Gets a specific task folder from the user with its ID.

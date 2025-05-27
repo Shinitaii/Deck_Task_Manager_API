@@ -33,6 +33,22 @@ export class TaskService {
   }
 
   /**
+   * Fetches all available tasks by user.
+   * @param {userId} userId - UID of the user
+   * @return {Promise<BaseResponse>} Response containing the
+   * tasks.
+   */
+  public async getNearingDueTasks(userId: string): Promise<object> {
+    try {
+      const response = await this.taskRepository.getNearingDueTasks(userId);
+
+      return {success: true, message: "Successful Fetched Tasks", data: response};
+    } catch (error) {
+      return {success: false, message: "Error fetching task: " + error, data: []};
+    }
+  }
+
+  /**
      * Business logic of fetching the tasks from user.
      * @param {userId} userId - UID of the user
      * @param {taskFolderId} taskFolderId - UID of the task
@@ -44,7 +60,7 @@ export class TaskService {
     userId: string, taskFolderId: string
   ): Promise<object> {
     const response = await this.taskRepository
-      .getTasksByFolder(userId, taskFolderId);
+      .getTasksByFolder(userId, taskFolderId, "end_date");
 
     return response;
   }
@@ -91,12 +107,13 @@ export class TaskService {
     userId: string,
     taskFolderId: string,
     date: Date
-  ): Promise<BaseResponse> {
+  ): Promise<object> {
     try {
       // New repository returns an object with three arrays
       const allGroups = await this.taskRepository.getTasksByFolder(
         userId,
-        taskFolderId
+        taskFolderId,
+        "start_date"
       ) as {
         pending: FirebaseFirestore.DocumentData[];
         inProgress: FirebaseFirestore.DocumentData[];
@@ -108,7 +125,7 @@ export class TaskService {
       // Helper to filter one bucket
       const filterByDate = (tasks: FirebaseFirestore.DocumentData[]) =>
         tasks.filter((t) => {
-          const taskDate = (t.start_date as Timestamp).toDate().toDateString();
+          const taskDate = new Date(t.start_date).toDateString();
           return taskDate === target;
         });
 
@@ -120,7 +137,8 @@ export class TaskService {
 
       return {
         success: true,
-        message: filtered, // you could rename this field to `data` if you prefer
+        message: "Successfully fetched tasks for selected date.",
+        data: filtered, // you could rename this field to `data` if you prefer
       };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {

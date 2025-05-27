@@ -48,6 +48,19 @@ export class TaskController {
   }
 
   /**
+   * Fetches all tasks from the user.
+   * @param {Request} req - The HTTP request object.
+   * @param {Response} res - The HTTP response object.
+   * @return {Promise<void>} A JSON response containing the action.
+   */
+  public async getNearingDueTasks(req: AuthenticatedRequest, res: Response): Promise<void> {
+    const userId = req.user?.user_id;
+    const tasks = await this.taskService.getNearingDueTasks(userId);
+
+    res.status(200).json(tasks);
+  }
+
+  /**
    * Fetches all tasks from the user with its selected date.
    * @param {Request} req - The HTTP request object.
    * @param {Response} res - The HTTP response object.
@@ -110,27 +123,20 @@ export class TaskController {
   public async getTasksByDateInFolder(
     req: AuthenticatedRequest, res: Response
   ): Promise<void> {
-    try {
-      const {taskFolderId, date} = req.body;
-      const userId = req.user?.user_id;
-      const tasks = await this.taskService
-        .getTasksByDateInFolder(userId, taskFolderId, date);
+    const {folderId} = req.params;
+    const {date} = req.query;
+    const targetDate = new Date(date as string);
+    const userId = req.user?.user_id;
+    const tasks = await this.taskService
+      .getTasksByDateInFolder(userId, folderId, targetDate);
 
-      if (!tasks) {
-        res.status(400).json(
-          {success: false, message: "Cannot fetch tasks."}
-        );
-      }
-
-      res.status(200).json(tasks);
-    } catch (error) {
-      if (error instanceof Error) {
-        console.log(error.message);
-      } else {
-        console.log("An unknown error occurred in " +
-          "fetching selected date tasks in folder.");
-      }
+    if (!tasks) {
+      res.status(400).json(
+        {success: false, message: "Cannot fetch tasks."}
+      );
     }
+
+    res.status(200).json(tasks);
   }
 
   /**
