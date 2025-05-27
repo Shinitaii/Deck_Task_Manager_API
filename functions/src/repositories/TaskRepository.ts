@@ -81,7 +81,7 @@ export class TaskRepository extends FirebaseAdmin {
           const data = doc.data();
           const status = data.status;
 
-          if (status === "pending" || status === "in progress") {
+          if (status.toLowerCase() === "pending" || status.toLowerCase() === "in progress") {
             const endDate = data.end_date ? new Date(data.end_date) : null;
 
             if (endDate) {
